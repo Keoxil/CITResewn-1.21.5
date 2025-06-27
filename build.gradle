@@ -35,10 +35,14 @@ loom {
 
 java {
     withSourcesJar()
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
     archivesBaseName = property('mod.jarname')
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release.set(17)
 }
 
 processResources {
@@ -58,9 +62,9 @@ jar {
 
 if (stonecutter.current.isActive) {
     rootProject.tasks.register('buildActive') {
-        setGroup 'project'
+        group = 'project'
 
-        dependsOn tasks.getByName('build')
+        dependsOn tasks.named('build')
     }
 
     plugins.apply 'com.modrinth.minotaur'
@@ -98,7 +102,7 @@ if (stonecutter.current.isActive) {
     }
 
     rootProject.tasks.register('publishActive') {
-        setGroup 'project'
+        group = 'project'
 
         if (gradle.startParameter.taskNames.contains(it.name)) {
             System.out.println("Type the task name to confirm (${it.name}): ")
@@ -108,12 +112,12 @@ if (stonecutter.current.isActive) {
             }
         }
 
-        Task remapJarTask = tasks.getByName 'remapJar'
-        Task curseforgeTask = tasks.getByName 'curseforge'
-        Task modrinthTask = tasks.getByName 'modrinth'
+        TaskProvider<Task> remapJarTask = tasks.named('remapJar')
+        TaskProvider<Task> curseforgeTask = tasks.named('curseforge')
+        TaskProvider<Task> modrinthTask = tasks.named('modrinth')
 
         dependsOn remapJarTask, curseforgeTask, modrinthTask
-        curseforgeTask.mustRunAfter remapJarTask
-        modrinthTask.mustRunAfter remapJarTask
+        curseforgeTask.configure { mustRunAfter remapJarTask }
+        modrinthTask.configure { mustRunAfter remapJarTask }
     }
 }

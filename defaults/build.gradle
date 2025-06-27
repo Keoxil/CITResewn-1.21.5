@@ -45,10 +45,14 @@ loom {
 
 java {
     withSourcesJar()
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
     archivesBaseName = "${property('mod.jarname')}-defaults"
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release.set(17)
 }
 
 processResources {
@@ -79,10 +83,10 @@ if (stonecutter.current.isActive) {
     }
 
     rootProject.tasks.named('publishActive') {
-        Task remapJarTask = tasks.getByName 'remapJar'
-        Task modrinthTask = tasks.getByName 'modrinth'
+        TaskProvider<Task> remapJarTask = tasks.named('remapJar')
+        TaskProvider<Task> modrinthTask = tasks.named('modrinth')
 
         dependsOn remapJarTask, modrinthTask
-        modrinthTask.mustRunAfter remapJarTask
+        modrinthTask.configure { mustRunAfter remapJarTask }
     }
 }
